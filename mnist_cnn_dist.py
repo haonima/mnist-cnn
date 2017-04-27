@@ -45,15 +45,15 @@ print("args:",args)
 print("{0} ===== Start".format(datetime.now().isoformat()))
 
 
-images = sc.textFile(args.images).map(lambda ln: [int(x) for x in ln.split(',')])
-labels = sc.textFile(args.labels).map(lambda ln: [float(x) for x in ln.split(',')])
+images = sc.textFile(args.images).map(lambda ln: [int(x) for x in ln.split(',')]).repartition(1)
+labels = sc.textFile(args.labels).map(lambda ln: [float(x) for x in ln.split(',')]).repartition(1)
 
 print("zipping images and labels")
 dataRDD = images.zip(labels)
 print("zipping done")
 
 cluster = TFCluster.reserve(sc, args.cluster_size, num_ps, args.tensorboard, TFCluster.InputMode.SPARK)
-cluster.start(dist_mapfun.map_fun, args)
+cluster.start(dist_mapfun.map_func, args)
 if args.mode == "train":
   cluster.train(dataRDD, args.epochs)
 else:

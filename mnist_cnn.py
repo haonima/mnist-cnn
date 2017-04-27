@@ -1,8 +1,11 @@
 #encoding:utf8
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+#from tensorflow.examples.tutorials.mnist import input_data
+#mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 import tensorflow as tf
+import local_data
 sess = tf.InteractiveSession()
+
+
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
@@ -18,6 +21,11 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                           strides=[1, 2, 2, 1], padding='SAME')
+
+batch_cur = 0
+def next_batch(num):
+    global batch_cur
+
 
 sess = tf.InteractiveSession()
 
@@ -82,9 +90,11 @@ correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1)) # 计算准�
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 sess.run(tf.global_variables_initializer()) # 变量初始化
 
+dt = local_data.DataSet('dataset/data')
 
-for i in range(101):
-    batch = mnist.train.next_batch(500)
+for i in range(20000):
+#    batch = mnist.train.next_batch(500)
+    batch = dt.random_next_batch('train',50)
     if i%100 == 0:
         # print(batch[1].shape)
         train_accuracy = accuracy.eval(feed_dict={
@@ -92,4 +102,12 @@ for i in range(101):
         print("step %d, training accuracy %g"%(i, train_accuracy))
     train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.9})
 
-print("test accuracy %g"%accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+#print("test accuracy %g"%accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+print("test accuracy %g"%accuracy.eval(feed_dict={x: dt.test_image(), y_: dt.test_label(), keep_prob: 1.0}))
+
+print 'inferencing...'
+prediction = tf.argmax(y_conv,1)
+label = sess.run([prediction], feed_dict={x: dt.inference_image(),keep_prob:1.0})
+with open('inference','w') as f:
+    s = [str(int(c)) for c in label ]
+    f.write(','.join(s))
