@@ -35,7 +35,7 @@ x_image = tf.reshape(x, [-1,28,28,1])
 #conv_1
 W_conv1 = weight_variable([5, 5, 1, 64])
 b_conv1 = bias_variable([64])
-h_conv1 = tf.nn.elu(conv2d(x_image, W_conv1) + b_conv1)
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 
 #pool_1
 h_pool1 = max_pool_2x2(h_conv1)
@@ -43,12 +43,12 @@ h_pool1 = max_pool_2x2(h_conv1)
 #conv_2
 W_conv2 = weight_variable([5, 5, 64, 32])
 b_conv2 = bias_variable([32])
-h_conv2 = tf.nn.elu(conv2d(h_pool1, W_conv2) + b_conv2)
+h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 
 #conv_3
 W_conv3 = weight_variable([5, 5, 32, 16])
 b_conv3 = bias_variable([16])
-h_conv3 = tf.nn.elu(conv2d(h_conv2, W_conv3) + b_conv3)
+h_conv3 = tf.nn.relu(conv2d(h_conv2, W_conv3) + b_conv3)
 
 #pool_2
 h_pool2 = max_pool_2x2(h_conv3)
@@ -56,7 +56,7 @@ h_pool2 = max_pool_2x2(h_conv3)
 #conv_4
 W_conv4 = weight_variable([5, 5, 16, 32])
 b_conv4 = bias_variable([32])
-h_conv4 = tf.nn.elu(conv2d(h_pool2, W_conv4) + b_conv4)
+h_conv4 = tf.nn.relu(conv2d(h_pool2, W_conv4) + b_conv4)
 
 #pool_3
 h_pool3 = max_pool_2x2(h_conv4)
@@ -64,17 +64,23 @@ h_pool3 = max_pool_2x2(h_conv4)
 #conv_5
 W_conv5 = weight_variable([2, 2, 32, 64])
 b_conv5 = bias_variable([64])
-h_conv5 = tf.nn.elu(conv2d(h_pool3, W_conv5) + b_conv5)
+h_conv5 = tf.nn.relu(conv2d(h_pool3, W_conv5) + b_conv5)
 
 #pool_4
-h_pool4 = max_pool_2x2(h_conv5)
+#h_pool4 = max_pool_2x2(h_conv5)
+
+
 
 #fully-connected
-W_fc1 = weight_variable([2 * 2 * 64, 1024])
+W_fc1 = weight_variable([4 * 4 * 64, 1024])
 b_fc1 = bias_variable([1024])
-h_pool2_flat = tf.reshape(h_pool4, [-1, 2 * 2 * 64])
+
+#h_conv5_flat = tf.reshape(h_conv5, [-1, 4 * 4 * 64])
+#h_pool3_flat = tf.reshape(h_pool3, [-1, 4 * 4 * 32])
+h_pool2_flat = tf.reshape(h_conv5, [-1, 4 * 4 * 64])
+#h_pool2_flat = tf.reshape(h_pool4, [-1, 2 * 2 * 64])
 #h_fc1 = tf.nn.elu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-h_fc1 = tf.nn.elu(tf.nn.xw_plus_b(h_pool2_flat,W_fc1,b_fc1))
+h_fc1 = tf.nn.relu(tf.nn.xw_plus_b(h_pool2_flat,W_fc1,b_fc1))
 keep_prob = tf.placeholder(tf.float32) #drop out
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
@@ -92,15 +98,16 @@ sess.run(tf.global_variables_initializer()) # 变量初始化
 
 dt = local_data.DataSet('dataset/data')
 
-for i in range(20000):
+
+for i in range(10000):
 #    batch = mnist.train.next_batch(500)
-    batch = dt.random_next_batch('train',50)
+    batch = dt.random_next_batch(50)
     if i%100 == 0:
         # print(batch[1].shape)
         train_accuracy = accuracy.eval(feed_dict={
             x:batch[0], y_: batch[1], keep_prob: 1.0})
         print("step %d, training accuracy %g"%(i, train_accuracy))
-    train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.9})
+    train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.8})
 
 #print("test accuracy %g"%accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
 print("test accuracy %g"%accuracy.eval(feed_dict={x: dt.test_image(), y_: dt.test_label(), keep_prob: 1.0}))
