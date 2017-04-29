@@ -22,6 +22,12 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                           strides=[1, 2, 2, 1], padding='SAME')
 
+def upsampling2d(shape):
+    shape4D = [batsiz, rows, cols, out_ch]
+    linout = tf.nn.conv2d_transpose(self.input, self.w, output_shape=shape4D,
+                                    strides=[1, 2, 2, 1], padding='SAME') + self.b
+    return tf.nn.conv2d_transpose()
+
 batch_cur = 0
 def next_batch(num):
     global batch_cur
@@ -30,7 +36,47 @@ def next_batch(num):
 sess = tf.InteractiveSession()
 
 x = tf.placeholder(tf.float32, [None, 784])
+
 x_image = tf.reshape(x, [-1,28,28,1])
+
+#auto encoding
+W_ae1 = weight_variable([5,5,1,16])
+b_ae1 = bias_variable([16])
+h_ae1 = tf.nn.relu(conv2d(x_image,W_ae1) + b_ae1)
+h_ae1_pool = max_pool_2x2(h_ae1)
+
+W_ae2 = weight_variable([5,5,1,8])
+b_ae2 = bias_variable([8])
+h_ae2 = tf.nn.relu(conv2d(h_ae1_pool,W_ae2) + b_ae2)
+h_ae2_pool = max_pool_2x2(h_ae2)
+
+W_ae3 = weight_variable([5,5,1,8])
+b_ae3 = bias_variable([8])
+h_ae3 = tf.nn.relu(conv2d(h_ae2_pool,W_ae3) + b_ae3)
+
+encoded = max_pool_2x2(h_ae3)
+#decoding
+W_de1 = weight_variable([2,2,1,8])
+b_de1 = bias_variable([8])
+h_de1 = tf.nn.conv2d_transpose(encoded,W_de1,[tf.shape(W_de1)[0],7,7,8],strides=[1,2,2,1],padding='SAME')+b_de1
+
+W_de1 = weight_variable([2,2,1,8])
+b_de1 = bias_variable([8])
+h_de1 = tf.nn.conv2d_transpose(encoded,W_de1,[tf.shape(W_de1)[0],7,7,8],strides=[1,2,2,1],padding='SAME')+b_de1
+
+W_de1 = weight_variable([2,2,1,8])
+b_de1 = bias_variable([8])
+h_de1 = tf.nn.conv2d_transpose(encoded,W_de1,[tf.shape(W_de1)[0],7,7,8],strides=[1,2,2,1],padding='SAME')+b_de1
+
+x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(encoded)
+x = UpSampling2D((2, 2))(x)
+x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(x)
+x = UpSampling2D((2, 2))(x)
+x = Convolution2D(16, 3, 3, activation='relu')(x)
+x = UpSampling2D((2, 2))(x)
+decoded = Convolution2D(1, 3, 3, activation='sigmoid', border_mode='same')(x)
+
+
 
 #conv_1
 W_conv1 = weight_variable([5, 5, 1, 64])
