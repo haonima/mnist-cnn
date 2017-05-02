@@ -68,13 +68,7 @@ W_de1 = weight_variable([2,2,1,8])
 b_de1 = bias_variable([8])
 h_de1 = tf.nn.conv2d_transpose(encoded,W_de1,[tf.shape(W_de1)[0],7,7,8],strides=[1,2,2,1],padding='SAME')+b_de1
 
-x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(encoded)
-x = UpSampling2D((2, 2))(x)
-x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Convolution2D(16, 3, 3, activation='relu')(x)
-x = UpSampling2D((2, 2))(x)
-decoded = Convolution2D(1, 3, 3, activation='sigmoid', border_mode='same')(x)
+
 
 
 
